@@ -34,6 +34,7 @@ func getCellStrings(row *xlsx.Row, i int) []string {
 		res = append(res, v)
 		if v != "" {
 			lastNotEmptyIndex = len(res)
+			lastNotEmptyIndex = len(res)
 		}
 	}
 
@@ -213,13 +214,12 @@ func loadTypes(typeSheets []*xlsx.Sheet) TypeList {
 				currentType.Group = group
 				currentType.Name = nameTmp
 				currentType.Title = getCellString(r, 0)
-				currentType.BaseType = getCellString(r, 2)
 				currentType.SheetName = sheet.Name
 				currentRows = make([]*xlsx.Row, 0)
 				currentRows = append(currentRows, r)
 			} else {
 				// correct property row
-				if getCellString(r, 3) != "" {
+				if getCellString(r, 2) != "" {
 					currentRows = append(currentRows, r)
 				}
 			}
@@ -235,13 +235,12 @@ func loadTypes(typeSheets []*xlsx.Sheet) TypeList {
 		t.Comments = make(map[int][]string)
 		for ri, r := range rows {
 			t.Properties = append(t.Properties, &Property{
-				Name:        getCellString(r, 3),
-				Type:        NewPropertyType(t.SheetName, t.Name, ri, 4, getCellString(r, 4)),
-				Format:      getCellString(r, 5),
-				Description: getCellString(r, 6),
+				Name:        getCellString(r, 2),
+				Type:        NewPropertyType(t.SheetName, t.Name, ri, 3, getCellString(r, 3)),
+				Description: getCellString(r, 4),
 			})
 
-			comments := getCellStrings(r, 7)
+			comments := getCellStrings(r, 5)
 			if comments != nil {
 				t.Comments[ri] = comments
 			}
@@ -277,14 +276,12 @@ func loadActions(actionSheets []*xlsx.Sheet) []*Action {
 				currentAction.Group = group
 				currentAction.Name = nameTmp
 				currentAction.Title = getCellString(r, 0)
-				currentAction.RequestBaseType = getCellString(r, 2)
-				currentAction.ResponseBaseType = getCellString(r, 7)
 				currentAction.SheetName = sheet.Name
 				currentRows = make([]*xlsx.Row, 0)
 				currentRows = append(currentRows, r)
 			} else {
 				// correct property row
-				if getCellString(r, 3) != "" || getCellString(r, 8) != "" {
+				if getCellString(r, 2) != "" || getCellString(r, 5) != "" {
 					currentRows = append(currentRows, r)
 				}
 			}
@@ -299,25 +296,23 @@ func loadActions(actionSheets []*xlsx.Sheet) []*Action {
 	for a, rows := range rowGroup {
 		a.Comments = make(map[int][]string)
 		for ri, r := range rows {
-			requestPropertyName := getCellString(r, 3)
+			requestPropertyName := getCellString(r, 2)
 			if requestPropertyName != "" {
 				a.RequestProperties = append(a.RequestProperties, &Property{
 					Name:        requestPropertyName,
-					Type:        NewPropertyType(a.SheetName, a.Name, ri, 4, getCellString(r, 4)),
-					Format:      getCellString(r, 5),
-					Description: getCellString(r, 6),
+					Type:        NewPropertyType(a.SheetName, a.Name, ri, 3, getCellString(r, 3)),
+					Description: getCellString(r, 4),
 				})
 			}
-			responsePropertyName := getCellString(r, 8)
+			responsePropertyName := getCellString(r, 5)
 			if responsePropertyName != "" {
 				a.ResponseProperties = append(a.ResponseProperties, &Property{
 					Name:        responsePropertyName,
-					Type:        NewPropertyType(a.SheetName, a.Name, ri, 9, getCellString(r, 9)),
-					Format:      getCellString(r, 10),
-					Description: getCellString(r, 11),
+					Type:        NewPropertyType(a.SheetName, a.Name, ri, 6, getCellString(r, 6)),
+					Description: getCellString(r, 7),
 				})
 			}
-			comments := getCellStrings(r, 12)
+			comments := getCellStrings(r, 8)
 			if comments != nil {
 				a.Comments[ri] = comments
 			}

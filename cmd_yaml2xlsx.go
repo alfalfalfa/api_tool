@@ -113,11 +113,9 @@ func writeTypesToSheet(sheet *xlsx.Sheet, types []*Type) {
 		row := sheet.AddRow()
 		row.AddCell().SetValue(typee.Title)
 		row.AddCell().SetValue(typee.Name)
-		row.AddCell().SetValue(typee.BaseType)
 		for i, prop := range typee.Properties {
 			row.AddCell().SetValue(prop.Name)
 			row.AddCell().SetValue(prop.Type.Name)
-			row.AddCell().SetValue(prop.Format)
 			row.AddCell().SetValue(prop.Description)
 
 			if typee.Comments != nil {
@@ -131,7 +129,6 @@ func writeTypesToSheet(sheet *xlsx.Sheet, types []*Type) {
 			row = sheet.AddRow()
 			row.AddCell()
 			row.AddCell()
-			row.AddCell()
 		}
 	}
 }
@@ -143,9 +140,7 @@ func writeActionsToSheet(sheet *xlsx.Sheet, actions []*Action) {
 			if i == 0 {
 				row.AddCell().SetValue(action.Title)
 				row.AddCell().SetValue(action.Name)
-				row.AddCell().SetValue(action.RequestBaseType)
 			} else {
-				row.AddCell()
 				row.AddCell()
 				row.AddCell()
 			}
@@ -154,18 +149,10 @@ func writeActionsToSheet(sheet *xlsx.Sheet, actions []*Action) {
 				prop := action.RequestProperties[i]
 				row.AddCell().SetValue(prop.Name)
 				row.AddCell().SetValue(prop.Type.Name)
-				row.AddCell().SetValue(prop.Format)
 				row.AddCell().SetValue(prop.Description)
 			} else {
 				row.AddCell()
 				row.AddCell()
-				row.AddCell()
-				row.AddCell()
-			}
-
-			if i == 0 {
-				row.AddCell().SetValue(action.ResponseBaseType)
-			} else {
 				row.AddCell()
 			}
 
@@ -173,7 +160,6 @@ func writeActionsToSheet(sheet *xlsx.Sheet, actions []*Action) {
 				prop := action.ResponseProperties[i]
 				row.AddCell().SetValue(prop.Name)
 				row.AddCell().SetValue(prop.Type.Name)
-				row.AddCell().SetValue(prop.Format)
 				row.AddCell().SetValue(prop.Description)
 			}
 

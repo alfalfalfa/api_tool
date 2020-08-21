@@ -14,7 +14,6 @@ func (p *Property) ToSchema(index int) *schema.Schema {
 	ps.Extras = make(map[string]interface{})
 	ps.Description = p.Description
 	ps.Type = append(ps.Type, p.Type.ToJsonSchemaType())
-	ps.Format = schema.Format(p.Format)
 	ps.Extras["order"] = index
 	return ps
 }

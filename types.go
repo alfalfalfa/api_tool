@@ -10,7 +10,6 @@ type Type struct {
 
 	Title      string
 	Name       string
-	BaseType   string
 	Properties []*Property
 
 	//TODO Validator定義
@@ -21,17 +20,12 @@ type Type struct {
 	Comments map[int][]string
 }
 
-// BaseTypeをすべて解決したPropertyリスト取得
 func (this *Type) AllProperties() []*Property {
 	if this.allProperties != nil {
 		return this.allProperties
 	}
 	res := make([]*Property, 0)
 	res = append(res, this.Properties...)
-
-	if this.BaseType != "" {
-		res = append(res, typeMap[this.BaseType].AllProperties()...)
-	}
 
 	this.allProperties = res
 	return res
@@ -67,9 +61,7 @@ type Action struct {
 	Name  string
 	//Url   string
 
-	RequestBaseType    string
 	RequestProperties  []*Property
-	ResponseBaseType   string
 	ResponseProperties []*Property
 
 	allRequestProperties  []*Property
@@ -88,10 +80,6 @@ func (this *Action) AllRequestProperties() []*Property {
 	res := make([]*Property, 0)
 	res = append(res, this.RequestProperties...)
 
-	if this.RequestBaseType != "" {
-		res = append(res, typeMap[this.RequestBaseType].AllProperties()...)
-	}
-
 	this.allRequestProperties = res
 
 	//dump(this)
@@ -105,10 +93,6 @@ func (this *Action) AllResponseProperties() []*Property {
 	}
 	res := make([]*Property, 0)
 	res = append(res, this.ResponseProperties...)
-
-	if this.ResponseBaseType != "" {
-		res = append(res, typeMap[this.ResponseBaseType].AllProperties()...)
-	}
 
 	this.allResponseProperties = res
 	return res
@@ -124,7 +108,6 @@ func NewAction() *Action {
 type Property struct {
 	Name        string
 	Type        PropertyType
-	Format      string
 	Description string
 
 	//TODO Validator定義
