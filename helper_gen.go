@@ -18,17 +18,32 @@ func (this *Property) HasAnotherType() bool {
 	return this.Type.HasAnotherType()
 }
 
+func (this *Action) Title() string {
+	return this.Description
+}
 func (this *Action) NameAsSnakeCase() string {
 	return CamelToSnake(this.Name)
+}
+func (this *Type) Title() string {
+	return this.Description
 }
 func (this *Type) NameAsSnakeCase() string {
 	return CamelToSnake(this.Name)
 }
+func (this PropertyType) Name() string {
+	return string(this)
+}
 func (this PropertyType) NameAsSnakeCase() string {
-	return CamelToSnake(this.Name)
+	return CamelToSnake(string(this))
+}
+func (this *Enum) Title() string {
+	return this.Description
 }
 func (this *Enum) NameAsSnakeCase() string {
 	return CamelToSnake(this.Name)
+}
+func (this *EnumMember) Num() int {
+	return this.Ordinal
 }
 func (this *Property) DummyData() interface{} {
 	return this.Type.DummyData()
@@ -51,7 +66,7 @@ func genDummyDataWithIndex(properties []*Property, i int) map[string]interface{}
 }
 
 func (this *Enum) DummyData() int {
-	return this.Members[0].Num
+	return this.Members[0].Ordinal
 }
 
 func (this *Type) DummyData() map[string]interface{} {
@@ -75,7 +90,7 @@ func (this PropertyType) DummyData() interface{} {
 	case schema.NullType:
 		return nil
 	case schema.IntegerType:
-		if ee, ok := enumMap[this.Name]; ok {
+		if ee, ok := enumMap[string(this)]; ok {
 			return ee.DummyData()
 		} else {
 			return 1
@@ -95,9 +110,9 @@ func (this PropertyType) DummyData() interface{} {
 		return 1.1
 	case schema.ObjectType:
 		//fmt.Println("schema.ObjectType")
-		return typeMap[this.Name].DummyData()
+		return typeMap[string(this)].DummyData()
 	}
-	panic(fmt.Sprint("invalid type:", this.Name))
+	panic(fmt.Sprint("invalid type:", string(this)))
 }
 
 func (this PropertyType) DummyDataWithIndex(i int) interface{} {
@@ -107,7 +122,7 @@ func (this PropertyType) DummyDataWithIndex(i int) interface{} {
 	case schema.NullType:
 		return nil
 	case schema.IntegerType:
-		if ee, ok := enumMap[this.Name]; ok {
+		if ee, ok := enumMap[string(this)]; ok {
 			return ee.DummyDataWithIndex(i)
 		} else {
 			return i
@@ -126,13 +141,13 @@ func (this PropertyType) DummyDataWithIndex(i int) interface{} {
 	case schema.NumberType:
 		return 1.1 * float64(i)
 	case schema.ObjectType:
-		return typeMap[this.Name].DummyDataWithIndex(i)
+		return typeMap[string(this)].DummyDataWithIndex(i)
 	}
-	panic(fmt.Sprint("invalid type:", this.Name))
+	panic(fmt.Sprint("invalid type:", string(this)))
 }
 
 func (this *Enum) DummyDataWithIndex(i int) int {
-	return this.Members[i%len(this.Members)].Num
+	return this.Members[i%len(this.Members)].Ordinal
 }
 
 func (this *Type) DummyDataWithIndex(i int) map[string]interface{} {

@@ -5,15 +5,10 @@ import (
 )
 
 type Type struct {
-	Group     string
-	SheetName string
-
-	Title      string
-	Name       string
-	Properties []*Property
-
-	//TODO Validator定義
-	Validators []Validator
+	Name        string
+	Description string
+	Group       string
+	Properties  []*Property
 
 	allProperties []*Property
 
@@ -54,20 +49,17 @@ func (this TypeList) Get(name string) *Type {
 }
 
 type Action struct {
-	Group     string
-	SheetName string
+	Name        string
+	Description string
+	Group       string
 
-	Title string
-	Name  string
-	//Url   string
-
-	RequestProperties  []*Property
-	ResponseProperties []*Property
+	RequestProperties  []*Property `yaml:"requestProperties"`
+	ResponseProperties []*Property `yaml:"responseProperties"`
 
 	allRequestProperties  []*Property
 	allResponseProperties []*Property
 
-	Comments map[int][]string
+	Comments map[int][]string `yaml:"comments,omitempty"`
 }
 
 // BaseTypeをすべて解決したPropertyリスト取得
@@ -109,43 +101,19 @@ type Property struct {
 	Name        string
 	Type        PropertyType
 	Description string
-
-	//TODO Validator定義
-	Validators []Validator
 }
 
 func NewProperty() *Property {
 	return &Property{}
 }
-
-type PropertyType struct {
-	SheetName       string
-	ClassName       string
-	RowIndexInClass int
-	ColIndex        int
-	Name            string
-}
-
-func NewPropertyType(sheetName, className string, rowIndex, colIndex int, name string) PropertyType {
-	res := PropertyType{
-		SheetName:       sheetName,
-		ClassName:       className,
-		RowIndexInClass: rowIndex,
-		ColIndex:        colIndex,
-		Name:            name,
-	}
-	return res
-}
+type PropertyType string
 
 type Enum struct {
-	Group string
-	Title string
-	Name  string
+	Name        string
+	Description string
+	Group       string
 
 	Members []*EnumMember
-
-	//TODO Validator定義
-	Validators []Validator
 }
 
 func NewEnum() *Enum {
@@ -156,13 +124,10 @@ func NewEnum() *Enum {
 
 type EnumMember struct {
 	Name        string
-	Num         int
-	DisplayName string
+	Ordinal     int
+	DisplayName string `yaml:"displayName"`
 	Description string
-	Comments    []string
-}
-
-type Validator struct {
+	Comments    []string `yaml:"comments,omitempty"`
 }
 
 type Group struct {

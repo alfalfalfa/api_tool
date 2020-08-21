@@ -144,7 +144,7 @@ func loadEnums(enumSheets []*xlsx.Sheet) []*Enum {
 				currentEnum = NewEnum()
 				currentEnum.Group = group
 				currentEnum.Name = nameTmp
-				currentEnum.Title = getCellString(r, 0)
+				currentEnum.Description = getCellString(r, 0)
 				currentRows = make([]*xlsx.Row, 0)
 				currentRows = append(currentRows, r)
 			} else {
@@ -174,11 +174,11 @@ func loadEnums(enumSheets []*xlsx.Sheet) []*Enum {
 			// 番号指定されていないなら連番とする
 			if numStr == "" {
 				num++
-				member.Num = num
+				member.Ordinal = num
 			} else {
-				member.Num, err = getCellInt(r, 3)
+				member.Ordinal, err = getCellInt(r, 3)
 				e(err)
-				num = member.Num
+				num = member.Ordinal
 			}
 
 			t.Members = append(t.Members, member)
@@ -213,8 +213,7 @@ func loadTypes(typeSheets []*xlsx.Sheet) TypeList {
 				currentType = NewType()
 				currentType.Group = group
 				currentType.Name = nameTmp
-				currentType.Title = getCellString(r, 0)
-				currentType.SheetName = sheet.Name
+				currentType.Description = getCellString(r, 0)
 				currentRows = make([]*xlsx.Row, 0)
 				currentRows = append(currentRows, r)
 			} else {
@@ -236,7 +235,7 @@ func loadTypes(typeSheets []*xlsx.Sheet) TypeList {
 		for ri, r := range rows {
 			t.Properties = append(t.Properties, &Property{
 				Name:        getCellString(r, 2),
-				Type:        NewPropertyType(t.SheetName, t.Name, ri, 3, getCellString(r, 3)),
+				Type:        PropertyType(getCellString(r, 3)),
 				Description: getCellString(r, 4),
 			})
 
@@ -275,8 +274,7 @@ func loadActions(actionSheets []*xlsx.Sheet) []*Action {
 				currentAction = NewAction()
 				currentAction.Group = group
 				currentAction.Name = nameTmp
-				currentAction.Title = getCellString(r, 0)
-				currentAction.SheetName = sheet.Name
+				currentAction.Description = getCellString(r, 0)
 				currentRows = make([]*xlsx.Row, 0)
 				currentRows = append(currentRows, r)
 			} else {
@@ -300,7 +298,7 @@ func loadActions(actionSheets []*xlsx.Sheet) []*Action {
 			if requestPropertyName != "" {
 				a.RequestProperties = append(a.RequestProperties, &Property{
 					Name:        requestPropertyName,
-					Type:        NewPropertyType(a.SheetName, a.Name, ri, 3, getCellString(r, 3)),
+					Type:        PropertyType(getCellString(r, 3)),
 					Description: getCellString(r, 4),
 				})
 			}
@@ -308,7 +306,7 @@ func loadActions(actionSheets []*xlsx.Sheet) []*Action {
 			if responsePropertyName != "" {
 				a.ResponseProperties = append(a.ResponseProperties, &Property{
 					Name:        responsePropertyName,
-					Type:        NewPropertyType(a.SheetName, a.Name, ri, 6, getCellString(r, 6)),
+					Type:        PropertyType(getCellString(r, 6)),
 					Description: getCellString(r, 7),
 				})
 			}

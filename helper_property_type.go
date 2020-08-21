@@ -13,7 +13,7 @@ func (this PropertyType) ToJsonSchemaType() (t schema.PrimitiveType) {
 		t = schema.ArrayType
 		return
 	}
-	switch this.Name {
+	switch string(this) {
 	case "null":
 		t = schema.NullType
 	case "nil":
@@ -66,9 +66,9 @@ func (this PropertyType) ToJsonSchemaType() (t schema.PrimitiveType) {
 	case "timestamp":
 		t = schema.IntegerType
 	default:
-		if _, ok := typeMap[this.Name]; ok {
+		if _, ok := typeMap[string(this)]; ok {
 			t = schema.ObjectType
-		} else if _, ok := enumMap[this.Name]; ok {
+		} else if _, ok := enumMap[string(this)]; ok {
 			t = schema.IntegerType
 		} else {
 			e(errors.New("unknown property type: " + dump2str(this)))
@@ -82,7 +82,7 @@ func (this PropertyType) ToGoType(packageName string) (t string) {
 		t = "[]" + this.GetArrayItemType().ToGoType(packageName)
 		return
 	}
-	switch this.Name {
+	switch string(this) {
 	case "null":
 		t = "nil"
 	case "nil":
@@ -134,9 +134,9 @@ func (this PropertyType) ToGoType(packageName string) (t string) {
 	case "timestamp":
 		t = "uint32"
 	default:
-		if tt, ok := typeMap[this.Name]; ok {
+		if tt, ok := typeMap[string(this)]; ok {
 			t = packageName + "." + tt.Name
-		} else if ee, ok := enumMap[this.Name]; ok {
+		} else if ee, ok := enumMap[string(this)]; ok {
 			t = packageName + "." + ee.Name
 		} else {
 			e(errors.New("unknown property type: " + dump2str(this)))
@@ -150,7 +150,7 @@ func (this PropertyType) ToRubyType(moduleName string) (t string) {
 		t = "Array<" + this.GetArrayItemType().ToRubyType(moduleName) + ">"
 		return
 	}
-	switch this.Name {
+	switch string(this) {
 	case "null":
 		t = "nil"
 	case "nil":
@@ -202,9 +202,9 @@ func (this PropertyType) ToRubyType(moduleName string) (t string) {
 	case "timestamp":
 		t = "Integer"
 	default:
-		if tt, ok := typeMap[this.Name]; ok {
+		if tt, ok := typeMap[string(this)]; ok {
 			t = moduleName + "::" + tt.Name
-		} else if ee, ok := enumMap[this.Name]; ok {
+		} else if ee, ok := enumMap[string(this)]; ok {
 			//TODO rubyのenum
 			t = moduleName + "::" + ee.Name
 		} else {
@@ -219,7 +219,7 @@ func (this PropertyType) ToCSType(namespace string) (t string) {
 		t = this.GetArrayItemType().ToCSType(namespace) + "[]"
 		return
 	}
-	switch this.Name {
+	switch string(this) {
 	case "null":
 		t = "null"
 	case "nil":
@@ -271,9 +271,9 @@ func (this PropertyType) ToCSType(namespace string) (t string) {
 	case "timestamp":
 		t = "uint"
 	default:
-		if tt, ok := typeMap[this.Name]; ok {
+		if tt, ok := typeMap[string(this)]; ok {
 			t = namespace + "." + tt.Name
-		} else if ee, ok := enumMap[this.Name]; ok {
+		} else if ee, ok := enumMap[string(this)]; ok {
 			t = namespace + "." + ee.Name
 		} else {
 			e(errors.New("unknown property type: " + dump2str(this)))
@@ -286,7 +286,7 @@ func (this PropertyType) ToFlowType(moduleName string) (t string) {
 		t = "Array<" + this.GetArrayItemType().ToFlowType(moduleName) + ">"
 		return
 	}
-	switch this.Name {
+	switch string(this) {
 	case "null":
 		t = "null"
 	case "nil":
@@ -338,13 +338,13 @@ func (this PropertyType) ToFlowType(moduleName string) (t string) {
 	case "timestamp":
 		t = "number"
 	default:
-		if tt, ok := typeMap[this.Name]; ok {
+		if tt, ok := typeMap[string(this)]; ok {
 			if moduleName == "" {
 				t = tt.Name
 			} else {
 				t = strings.TrimSuffix(moduleName, ".") + "." + tt.Name
 			}
-		} else if ee, ok := enumMap[this.Name]; ok {
+		} else if ee, ok := enumMap[string(this)]; ok {
 			if moduleName == "" {
 				t = ee.Name
 			} else {
@@ -358,22 +358,22 @@ func (this PropertyType) ToFlowType(moduleName string) (t string) {
 }
 
 func (this PropertyType) IsArray() bool {
-	return strings.HasPrefix(this.Name, "[]") || strings.HasSuffix(this.Name, "[]")
+	return strings.HasPrefix(string(this), "[]") || strings.HasSuffix(string(this), "[]")
 	//||	this.Name == "binary"
 }
 
 func (this PropertyType) GetArrayItemType() PropertyType {
 	if !this.IsArray() {
-		panic(this.Name + " is not array")
+		panic(string(this) + " is not array")
 	}
-	return NewPropertyType(this.SheetName, this.ClassName, this.RowIndexInClass, this.ColIndex, strings.Replace(this.Name, "[]", "", -1))
+	return PropertyType(strings.Replace(string(this), "[]", "", -1))
 }
 
 func (this PropertyType) HasAnotherType() bool {
 	return this.ToJsonSchemaType() == schema.ObjectType || (this.ToJsonSchemaType() == schema.ArrayType && this.GetArrayItemType().HasAnotherType())
 }
 func (this PropertyType) GetType() *Type {
-	if t, ok := typeMap[this.Name]; ok {
+	if t, ok := typeMap[string(this)]; ok {
 		return t
 	} else {
 		e(errors.New("unknown property type: " + dump2str(this)))
@@ -385,6 +385,6 @@ func (this PropertyType) IsObject() bool {
 	return this.ToJsonSchemaType() == schema.ObjectType
 }
 func (this PropertyType) IsEnum() bool {
-	_, ok := enumMap[this.Name]
+	_, ok := enumMap[string(this)]
 	return ok
 }

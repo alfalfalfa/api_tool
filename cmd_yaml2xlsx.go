@@ -87,12 +87,12 @@ func outputXlsx(path string, groups Groups) {
 func writeEnumsToSheet(sheet *xlsx.Sheet, enums []*Enum) {
 	for _, enum := range enums {
 		row := sheet.AddRow()
-		row.AddCell().SetValue(enum.Title)
+		row.AddCell().SetValue(enum.Description)
 		row.AddCell().SetValue(enum.Name)
 
 		for _, member := range enum.Members {
 			row.AddCell().SetValue(member.Name)
-			row.AddCell().SetValue(member.Num)
+			row.AddCell().SetValue(member.Ordinal)
 			row.AddCell().SetValue(member.DisplayName)
 			row.AddCell().SetValue(member.Description)
 			if member.Comments != nil {
@@ -111,11 +111,11 @@ func writeEnumsToSheet(sheet *xlsx.Sheet, enums []*Enum) {
 func writeTypesToSheet(sheet *xlsx.Sheet, types []*Type) {
 	for _, typee := range types {
 		row := sheet.AddRow()
-		row.AddCell().SetValue(typee.Title)
+		row.AddCell().SetValue(typee.Description)
 		row.AddCell().SetValue(typee.Name)
 		for i, prop := range typee.Properties {
 			row.AddCell().SetValue(prop.Name)
-			row.AddCell().SetValue(prop.Type.Name)
+			row.AddCell().SetValue(prop.Type)
 			row.AddCell().SetValue(prop.Description)
 
 			if typee.Comments != nil {
@@ -138,7 +138,7 @@ func writeActionsToSheet(sheet *xlsx.Sheet, actions []*Action) {
 		for i := 0; i < len(action.RequestProperties) || i < len(action.ResponseProperties); i++ {
 			row := sheet.AddRow()
 			if i == 0 {
-				row.AddCell().SetValue(action.Title)
+				row.AddCell().SetValue(action.Description)
 				row.AddCell().SetValue(action.Name)
 			} else {
 				row.AddCell()
@@ -148,7 +148,7 @@ func writeActionsToSheet(sheet *xlsx.Sheet, actions []*Action) {
 			if i < len(action.RequestProperties) {
 				prop := action.RequestProperties[i]
 				row.AddCell().SetValue(prop.Name)
-				row.AddCell().SetValue(prop.Type.Name)
+				row.AddCell().SetValue(prop.Type)
 				row.AddCell().SetValue(prop.Description)
 			} else {
 				row.AddCell()
@@ -159,7 +159,7 @@ func writeActionsToSheet(sheet *xlsx.Sheet, actions []*Action) {
 			if i < len(action.ResponseProperties) {
 				prop := action.ResponseProperties[i]
 				row.AddCell().SetValue(prop.Name)
-				row.AddCell().SetValue(prop.Type.Name)
+				row.AddCell().SetValue(prop.Type)
 				row.AddCell().SetValue(prop.Description)
 			}
 
