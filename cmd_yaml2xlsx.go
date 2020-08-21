@@ -3,9 +3,9 @@ package main
 import (
 	"strings"
 
-	"github.com/tealeg/xlsx"
 	"github.com/docopt/docopt-go"
 	"github.com/gobuffalo/packr"
+	"github.com/tealeg/xlsx"
 )
 
 const usageYaml2Xlsx = `api_tool yaml2xlsx

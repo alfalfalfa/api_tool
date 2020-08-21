@@ -7,7 +7,7 @@ import (
 type Type struct {
 	Name        string
 	Description string
-	Group       string
+	Group       string `yaml:"-"`
 	Properties  []*Property
 
 	allProperties []*Property
@@ -51,7 +51,7 @@ func (this TypeList) Get(name string) *Type {
 type Action struct {
 	Name        string
 	Description string
-	Group       string
+	Group       string `yaml:"-"`
 
 	RequestProperties  []*Property `yaml:"requestProperties"`
 	ResponseProperties []*Property `yaml:"responseProperties"`
@@ -106,12 +106,13 @@ type Property struct {
 func NewProperty() *Property {
 	return &Property{}
 }
+
 type PropertyType string
 
 type Enum struct {
 	Name        string
 	Description string
-	Group       string
+	Group       string `yaml:"-"`
 
 	Members []*EnumMember
 }

@@ -7,6 +7,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+//
 var typeMap map[string]*Type
 var enumMap map[string]*Enum
 
@@ -52,8 +53,7 @@ func load(pathes []string, outputGroups []string) ([]*Enum, TypeList, []*Action,
 			}
 		}
 
-		// TODO groupのフィルタリング必要？
-
+		// TODO groupsのフィルタリング必要？
 		return filtered_enums, filtered_types, filtered_actions, groups
 	}
 
@@ -88,6 +88,15 @@ func loadYamls(pathes []string) ([]*Enum, TypeList, []*Action, Groups) {
 		for _, group := range tmpGroups {
 			// 並び順をブック指定順、シート定義順にしたいので事前生成
 			groups.findOrCreate(group.Name)
+			for _, enum := range group.Enums {
+				enum.Group = group.Name
+			}
+			for _, typ := range group.Types {
+				typ.Group = group.Name
+			}
+			for _, action := range group.Actions {
+				action.Group = group.Name
+			}
 			enums = append(enums, group.Enums...)
 			types = append(types, group.Types...)
 			actions = append(actions, group.Actions...)
