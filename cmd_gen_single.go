@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 
-	"regexp"
-
 	"os"
 	"path"
 
@@ -93,6 +91,8 @@ func RunGenSingle() {
 	//dump(types)
 	//dump(actions)
 
+	pongo2.DefaultSet.Options.TrimBlocks = true
+	pongo2.DefaultSet.Options.LStripBlocks = true
 	context := pongo2.Context{
 		"enums":   enums,
 		"types":   types,
@@ -115,16 +115,16 @@ func RunGenSingle() {
 	}
 
 	os.MkdirAll(path.Dir(outputPath), os.ModePerm)
-
 	tpl, err := pongo2.DefaultSet.FromFile(arg.TemplatePath)
 	e(err)
+	//tpl.Options.TrimBlocks = true
+	//tpl.Options.LStripBlocks = true
 	res, err := tpl.Execute(context)
 	e(err)
 	//tpl.ExecuteWriter(pongo2.Context{"page": page}, w)
 
-	// 連続した改行を詰める
-	re := regexp.MustCompile("\n+")
-	res = re.ReplaceAllString(res, "\n")
+	// 先頭・末尾の改行を削除し、最終行は殻行を作る
+	res = strings.TrimSpace(res) + "\n"
 
 	if arg.IsSkip() {
 		_, err := os.Stat(outputPath)

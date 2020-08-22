@@ -44,6 +44,8 @@ func (this PropertyType) ToJsonSchemaType() (t schema.PrimitiveType) {
 		t = schema.IntegerType
 	case "sint64":
 		t = schema.IntegerType
+	case "text":
+		t = schema.StringType
 	case "string":
 		t = schema.StringType
 	case "binary":
@@ -113,6 +115,8 @@ func (this PropertyType) ToGoType(packageName string) (t string) {
 		t = "int32"
 	case "sint64":
 		t = "int64"
+	case "text":
+		t = "string"
 	case "string":
 		t = "string"
 	case "binary":
@@ -181,6 +185,8 @@ func (this PropertyType) ToRubyType(moduleName string) (t string) {
 		t = "Integer"
 	case "sint64":
 		t = "Integer"
+	case "text":
+		t = "String"
 	case "string":
 		t = "String"
 	case "binary":
@@ -250,6 +256,8 @@ func (this PropertyType) ToCSType(namespace string) (t string) {
 		t = "int"
 	case "sint64":
 		t = "long"
+	case "text":
+		t = "string"
 	case "string":
 		t = "string"
 	case "binary":
@@ -317,6 +325,8 @@ func (this PropertyType) ToFlowType(moduleName string) (t string) {
 		t = "number"
 	case "sint64":
 		t = "number"
+	case "text":
+		t = "string"
 	case "string":
 		t = "string"
 	case "binary":
@@ -356,7 +366,213 @@ func (this PropertyType) ToFlowType(moduleName string) (t string) {
 	}
 	return
 }
-
+func (this PropertyType) ToJavaType(namespace string) (t string) {
+	if this.IsArray() {
+		t = "List<" + this.GetArrayItemType().ToJavaClassType(namespace) + ">"
+		return
+	}
+	switch string(this) {
+	case "null":
+		t = "null"
+	case "nil":
+		t = "null"
+	case "integer":
+		t = "int"
+	case "int":
+		t = "int"
+	case "int8":
+		t = "byte"
+	case "int16":
+		t = "short"
+	case "int32":
+		t = "int"
+	case "int64":
+		t = "long"
+	case "long":
+		t = "long"
+	case "uint8":
+		t = "short"
+	case "uint16":
+		t = "int"
+	case "uint32":
+		t = "long"
+	case "uint64":
+		t = "long"
+	case "sint32":
+		t = "int"
+	case "sint64":
+		t = "long"
+	case "text":
+		t = "String"
+	case "string":
+		t = "String"
+	case "binary":
+		t = "byte[]"
+	case "boolean":
+		t = "boolean"
+	case "bool":
+		t = "boolean"
+	case "number":
+		t = "double"
+	case "float32":
+		t = "float"
+	case "float":
+		t = "float"
+	case "float64":
+		t = "double"
+	case "double":
+		t = "double"
+	case "timestamp":
+		t = "long"
+	default:
+		if tt, ok := typeMap[string(this)]; ok {
+			t = namespace + tt.Name
+		} else if ee, ok := enumMap[string(this)]; ok {
+			t = namespace + ee.Name
+		} else {
+			e(errors.New("unknown property type: " + dump2str(this)))
+		}
+	}
+	return
+}
+func (this PropertyType) ToJavaClassType(namespace string) (t string) {
+	if this.IsArray() {
+		t = "List<" + this.GetArrayItemType().ToJavaClassType(namespace) + ">"
+		return
+	}
+	switch string(this) {
+	case "null":
+		t = "null"
+	case "nil":
+		t = "null"
+	case "integer":
+		t = "Integer"
+	case "int":
+		t = "Integer"
+	case "int8":
+		t = "Byte"
+	case "int16":
+		t = "Short"
+	case "int32":
+		t = "Integer"
+	case "int64":
+		t = "Long"
+	case "long":
+		t = "Long"
+	case "uint8":
+		t = "Short"
+	case "uint16":
+		t = "Integer"
+	case "uint32":
+		t = "Long"
+	case "uint64":
+		t = "Long"
+	case "sint32":
+		t = "Integer"
+	case "sint64":
+		t = "Long"
+	case "text":
+		t = "String"
+	case "string":
+		t = "String"
+	case "binary":
+		t = "Byte[]"
+	case "boolean":
+		t = "Boolean"
+	case "bool":
+		t = "Boolean"
+	case "number":
+		t = "Double"
+	case "float32":
+		t = "Float"
+	case "float":
+		t = "Float"
+	case "float64":
+		t = "Double"
+	case "double":
+		t = "Double"
+	case "timestamp":
+		t = "Long"
+	default:
+		if tt, ok := typeMap[string(this)]; ok {
+			t = namespace + tt.Name
+		} else if ee, ok := enumMap[string(this)]; ok {
+			t = namespace + ee.Name
+		} else {
+			e(errors.New("unknown property type: " + dump2str(this)))
+		}
+	}
+	return
+}
+func (this PropertyType) ToTSType(namespace string) (t string) {
+	if this.IsArray() {
+		t = this.GetArrayItemType().ToTSType(namespace) + "[]"
+		return
+	}
+	switch string(this) {
+	case "null":
+		t = "null"
+	case "nil":
+		t = "null"
+	case "integer":
+		t = "number"
+	case "int":
+		t = "number"
+	case "int8":
+		t = "number"
+	case "int16":
+		t = "number"
+	case "int32":
+		t = "number"
+	case "int64":
+		t = "number"
+	case "long":
+		t = "number"
+	case "uint8":
+		t = "number"
+	case "uint16":
+		t = "number"
+	case "uint32":
+		t = "number"
+	case "uint64":
+		t = "number"
+	case "sint32":
+		t = "number"
+	case "sint64":
+		t = "number"
+	case "text":
+		t = "string"
+	case "string":
+		t = "string"
+	case "binary":
+		t = "string"
+	case "boolean":
+		t = "boolean"
+	case "bool":
+		t = "boolean"
+	case "number":
+		t = "number"
+	case "float32":
+		t = "number"
+	case "float":
+		t = "number"
+	case "float64":
+		t = "number"
+	case "double":
+		t = "number"
+	case "timestamp":
+		t = "number"
+	default:
+		if tt, ok := typeMap[string(this)]; ok {
+			t = namespace + tt.Name
+		} else if ee, ok := enumMap[string(this)]; ok {
+			t = namespace + ee.Name
+		} else {
+			e(errors.New("unknown property type: " + dump2str(this)))
+		}
+	}
+	return
+}
 func (this PropertyType) IsArray() bool {
 	return strings.HasPrefix(string(this), "[]") || strings.HasSuffix(string(this), "[]")
 	//||	this.Name == "binary"

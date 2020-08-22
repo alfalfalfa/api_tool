@@ -175,5 +175,9 @@ func (this *Groups) findOrCreate(name string) *Group {
 	return res
 }
 func GroupNameFromSheetName(sheetName string) string {
+	//tmp := strings.SplitN(sheetName, "_", 2)
+	//if len(tmp) < 2{
+	//	return ""
+	//}
 	return strings.SplitN(sheetName, "_", 2)[1]
 }

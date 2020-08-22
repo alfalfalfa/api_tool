@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 
-	"regexp"
-
 	"os"
 	"path"
 
@@ -95,7 +93,8 @@ func RunGenMultiple() {
 
 	//dump(types)
 	//dump(actions)
-
+	pongo2.DefaultSet.Options.TrimBlocks = true
+	pongo2.DefaultSet.Options.LStripBlocks = true
 	outputPathTpl, err := pongo2.DefaultSet.FromString(arg.OutputPathPetterm)
 	e(err)
 	tpl, err := pongo2.DefaultSet.FromFile(arg.TemplatePath)
@@ -186,9 +185,8 @@ func renderTemplate(context pongo2.Context, outputPathTpl, tpl *pongo2.Template)
 	res, err := tpl.Execute(context)
 	e(err)
 
-	// 連続した改行を詰める
-	re := regexp.MustCompile("\n+")
-	res = re.ReplaceAllString(res, "\n")
+	// 先頭・末尾の改行を削除し、最終行は殻行を作る
+	res = strings.TrimSpace(res) + "\n"
 
 	return outputPath, res
 }
