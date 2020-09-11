@@ -19,6 +19,14 @@ func checkCommentRow(row *xlsx.Row) bool {
 	return false
 }
 
+func checkCommentStartRow(row *xlsx.Row) bool {
+	v := getCellString(row, 0)
+	if strings.HasPrefix(v, "//==") {
+		return true
+	}
+	return false
+}
+
 func getCellString(row *xlsx.Row, i int) string {
 	if len(row.Cells) <= i {
 		return ""
@@ -133,6 +141,12 @@ func loadEnums(enumSheets []*xlsx.Sheet) []*Enum {
 			if ri == 0 {
 				continue
 			}
+			if checkCommentStartRow(r){
+				break
+			}
+			if checkCommentRow(r){
+				continue
+			}
 
 			// get enum values
 			nameTmp := getCellString(r, 1)
@@ -202,6 +216,12 @@ func loadTypes(typeSheets []*xlsx.Sheet) TypeList {
 			if ri == 0 {
 				continue
 			}
+			if checkCommentStartRow(r){
+				break
+			}
+			if checkCommentRow(r){
+				continue
+			}
 
 			// get type values
 			nameTmp := getCellString(r, 1)
@@ -261,6 +281,12 @@ func loadActions(actionSheets []*xlsx.Sheet) []*Action {
 		for ri, r := range sheet.Rows {
 			// skip header
 			if ri == 0 {
+				continue
+			}
+			if checkCommentStartRow(r){
+				break
+			}
+			if checkCommentRow(r){
 				continue
 			}
 
