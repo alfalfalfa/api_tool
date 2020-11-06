@@ -604,3 +604,11 @@ func (this PropertyType) IsEnum() bool {
 	_, ok := enumMap[string(this)]
 	return ok
 }
+func (this PropertyType) GetEnum() *Enum {
+	if t, ok := enumMap[string(this)]; ok {
+		return t
+	} else {
+		e(errors.New("unknown enum type: " + dump2str(this)))
+	}
+	return nil
+}
