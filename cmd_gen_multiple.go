@@ -17,7 +17,7 @@ import (
 const usageGenMultiple = `api_tool gen-multiple
 	API定義とpongo2テンプレートから複数のテキスト生成
 Usage:
-  api_tool gen-multiple (--target=<TARGET>) [--only=<OUTPUT_GROUPS>] [--overwrite=<OVERWRITE_MODE>] [--arg=<ARGUMENTS>] <OUTPUT_PATH_PETTERN> <TEMPLATE_PATH> INPUTS...
+  api_tool gen-multiple (--target=<TARGET>) [--skip-modifier] [--only=<OUTPUT_GROUPS>] [--overwrite=<OVERWRITE_MODE>] [--arg=<ARGUMENTS>] <OUTPUT_PATH_PETTERN> <TEMPLATE_PATH> INPUTS...
   api_tool gen-multiple -h | --help
 
 Args:
@@ -26,6 +26,7 @@ Args:
 	INPUTS...              入力ファイルパス（xlsx）
 
 Options:
+	--skip-modifier               Modifierが指定されているType,Enumの出力を行わない
 	--overwrite=<OVERWRITE_MODE>  Overwrite behavior [default:force]
 							        force 上書き
 									skip  存在していたらスキップ
@@ -48,6 +49,7 @@ type GenMultipleArg struct {
 	OverwriteMode     string
 	Arguments         map[string]string
 	Target            string
+	SkipModifier      bool
 }
 
 func (this GenMultipleArg) IsClear() bool {
@@ -69,6 +71,7 @@ func NewGenMultipleArg(arguments map[string]interface{}) GenMultipleArg {
 		OverwriteMode:     s(arguments["--overwrite"]),
 		Arguments:         make(map[string]string),
 		Target:            s(arguments["--target"]),
+		SkipModifier:      b(arguments["--skip-modifier"]),
 	}
 	arg := s(arguments["--arg"])
 	if arg != "" {
@@ -90,6 +93,24 @@ func RunGenMultiple() {
 	arg := NewGenMultipleArg(arguments)
 
 	enums, types, actions, _ := load(arg.Inputs, arg.OutputGroups)
+
+	if arg.SkipModifier {
+		filterdTypes := make([]*Type, 0)
+		for _, t := range types {
+			if t.Modifier == "" {
+				filterdTypes = append(filterdTypes, t)
+			}
+		}
+		types = filterdTypes
+
+		filterdEnums := make([]*Enum, 0)
+		for _, e := range enums {
+			if e.Modifier == "" {
+				filterdEnums = append(filterdEnums, e)
+			}
+		}
+		enums = filterdEnums
+	}
 
 	//dump(types)
 	//dump(actions)

@@ -5,7 +5,9 @@ import (
 )
 
 type Type struct {
-	Name        string
+	Modifier string `yaml:"modifier,omitempty"`
+	Name     string
+
 	Description string `yaml:"description,omitempty"`
 	Group       string `yaml:"-"`
 	Properties  []*Property
@@ -110,7 +112,9 @@ func NewProperty() *Property {
 type PropertyType string
 
 type Enum struct {
-	Name        string
+	Modifier string `yaml:"modifier,omitempty"`
+	Name     string
+
 	Description string `yaml:"description,omitempty"`
 	Group       string `yaml:"-"`
 

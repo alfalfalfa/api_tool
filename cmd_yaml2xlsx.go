@@ -88,7 +88,7 @@ func writeEnumsToSheet(sheet *xlsx.Sheet, enums []*Enum) {
 	for _, enum := range enums {
 		row := sheet.AddRow()
 		row.AddCell().SetValue(enum.Description)
-		row.AddCell().SetValue(enum.Name)
+		row.AddCell().SetValue(enum.Modifier + enum.Name)
 
 		for _, member := range enum.Members {
 			row.AddCell().SetValue(member.Name)
@@ -112,7 +112,7 @@ func writeTypesToSheet(sheet *xlsx.Sheet, types []*Type) {
 	for _, typee := range types {
 		row := sheet.AddRow()
 		row.AddCell().SetValue(typee.Description)
-		row.AddCell().SetValue(typee.Name)
+		row.AddCell().SetValue(typee.Modifier + typee.Name)
 		for i, prop := range typee.Properties {
 			row.AddCell().SetValue(prop.Name)
 			row.AddCell().SetValue(prop.Type)

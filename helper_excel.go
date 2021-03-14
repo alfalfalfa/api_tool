@@ -73,6 +73,19 @@ func getCellBool(row *xlsx.Row, i int) bool {
 	return getCellString(row, i) != ""
 }
 
+func separateModifier(v string) (string, string) {
+	var i int
+	i = strings.LastIndex(v, ".")
+	if i != -1 {
+		return v[:i+1], v[i+1:]
+	}
+	i = strings.LastIndex(v, "/")
+	if i != -1 {
+		return v[:i+1], v[i+1:]
+	}
+	return "", v
+}
+
 // Excel -> 中間データ
 func loadExcels(pathes []string) ([]*Enum, TypeList, []*Action, Groups) {
 	groups := Groups(make([]*Group, 0))
@@ -141,10 +154,10 @@ func loadEnums(enumSheets []*xlsx.Sheet) []*Enum {
 			if ri == 0 {
 				continue
 			}
-			if checkCommentStartRow(r){
+			if checkCommentStartRow(r) {
 				break
 			}
-			if checkCommentRow(r){
+			if checkCommentRow(r) {
 				continue
 			}
 
@@ -157,7 +170,7 @@ func loadEnums(enumSheets []*xlsx.Sheet) []*Enum {
 				}
 				currentEnum = NewEnum()
 				currentEnum.Group = group
-				currentEnum.Name = nameTmp
+				currentEnum.Modifier, currentEnum.Name = separateModifier(nameTmp)
 				currentEnum.Description = getCellString(r, 0)
 				currentRows = make([]*xlsx.Row, 0)
 				currentRows = append(currentRows, r)
@@ -216,10 +229,10 @@ func loadTypes(typeSheets []*xlsx.Sheet) TypeList {
 			if ri == 0 {
 				continue
 			}
-			if checkCommentStartRow(r){
+			if checkCommentStartRow(r) {
 				break
 			}
-			if checkCommentRow(r){
+			if checkCommentRow(r) {
 				continue
 			}
 
@@ -232,7 +245,7 @@ func loadTypes(typeSheets []*xlsx.Sheet) TypeList {
 				}
 				currentType = NewType()
 				currentType.Group = group
-				currentType.Name = nameTmp
+				currentType.Modifier, currentType.Name = separateModifier(nameTmp)
 				currentType.Description = getCellString(r, 0)
 				currentRows = make([]*xlsx.Row, 0)
 				currentRows = append(currentRows, r)
@@ -283,10 +296,10 @@ func loadActions(actionSheets []*xlsx.Sheet) []*Action {
 			if ri == 0 {
 				continue
 			}
-			if checkCommentStartRow(r){
+			if checkCommentStartRow(r) {
 				break
 			}
-			if checkCommentRow(r){
+			if checkCommentRow(r) {
 				continue
 			}
 

@@ -366,9 +366,34 @@ func (this PropertyType) ToFlowType(moduleName string) (t string) {
 	}
 	return
 }
-func (this PropertyType) ToJavaType(namespace string) (t string) {
+
+func (this *Type) GetFullName(namespace string, withModifier bool) string {
+	if withModifier {
+		return this.Modifier + this.Name
+	} else {
+		return namespace + this.Name
+	}
+}
+
+func (this *Enum) GetFullName(namespace string, withModifier bool) string {
+	if withModifier {
+		return this.Modifier + this.Name
+	} else {
+		return namespace + this.Name
+	}
+}
+
+func (this PropertyType) ToJavaTypeWithModifier() (t string) {
+	return this.ToJavaType("", true)
+}
+
+func (this PropertyType) ToJavaTypeWithNamespace(namespace string) (t string) {
+	return this.ToJavaType(namespace, false)
+}
+
+func (this PropertyType) ToJavaType(namespace string, withModifier bool) (t string) {
 	if this.IsArray() {
-		t = "List<" + this.GetArrayItemType().ToJavaClassType(namespace) + ">"
+		t = "List<" + this.GetArrayItemType().ToJavaClassType(namespace, withModifier) + ">"
 		return
 	}
 	switch string(this) {
@@ -426,18 +451,27 @@ func (this PropertyType) ToJavaType(namespace string) (t string) {
 		t = "long"
 	default:
 		if tt, ok := typeMap[string(this)]; ok {
-			t = namespace + tt.Name
+			t = tt.GetFullName(namespace, withModifier)
 		} else if ee, ok := enumMap[string(this)]; ok {
-			t = namespace + ee.Name
+			t = ee.GetFullName(namespace, withModifier)
 		} else {
 			e(errors.New("unknown property type: " + dump2str(this)))
 		}
 	}
 	return
 }
-func (this PropertyType) ToJavaClassType(namespace string) (t string) {
+
+func (this PropertyType) ToJavaClassTypeWithModifier() (t string) {
+	return this.ToJavaClassType("", true)
+}
+
+func (this PropertyType) ToJavaClassTypeWithNamespace(namespace string) (t string) {
+	return this.ToJavaClassType(namespace, false)
+}
+
+func (this PropertyType) ToJavaClassType(namespace string, withModifier bool) (t string) {
 	if this.IsArray() {
-		t = "List<" + this.GetArrayItemType().ToJavaClassType(namespace) + ">"
+		t = "List<" + this.GetArrayItemType().ToJavaClassType(namespace, withModifier) + ">"
 		return
 	}
 	switch string(this) {
@@ -495,9 +529,9 @@ func (this PropertyType) ToJavaClassType(namespace string) (t string) {
 		t = "Long"
 	default:
 		if tt, ok := typeMap[string(this)]; ok {
-			t = namespace + tt.Name
+			t = tt.GetFullName(namespace, withModifier)
 		} else if ee, ok := enumMap[string(this)]; ok {
-			t = namespace + ee.Name
+			t = ee.GetFullName(namespace, withModifier)
 		} else {
 			e(errors.New("unknown property type: " + dump2str(this)))
 		}
