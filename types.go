@@ -6,13 +6,13 @@ import (
 
 type Type struct {
 	Name        string
-	Description string
+	Description string `yaml:"description,omitempty"`
 	Group       string `yaml:"-"`
 	Properties  []*Property
 
 	allProperties []*Property
 
-	Comments map[int][]string
+	Comments map[int][]string `yaml:"comments,omitempty"`
 }
 
 func (this *Type) AllProperties() []*Property {
@@ -50,7 +50,7 @@ func (this TypeList) Get(name string) *Type {
 
 type Action struct {
 	Name        string
-	Description string
+	Description string `yaml:"description,omitempty"`
 	Group       string `yaml:"-"`
 
 	RequestProperties  []*Property `yaml:"requestProperties"`
@@ -100,7 +100,7 @@ func NewAction() *Action {
 type Property struct {
 	Name        string
 	Type        PropertyType
-	Description string
+	Description string `yaml:"description,omitempty"`
 }
 
 func NewProperty() *Property {
@@ -111,7 +111,7 @@ type PropertyType string
 
 type Enum struct {
 	Name        string
-	Description string
+	Description string `yaml:"description,omitempty"`
 	Group       string `yaml:"-"`
 
 	Members []*EnumMember
@@ -126,8 +126,8 @@ func NewEnum() *Enum {
 type EnumMember struct {
 	Name        string
 	Ordinal     int
-	DisplayName string `yaml:"displayName"`
-	Description string
+	DisplayName string   `yaml:"displayName,omitempty"`
+	Description string   `yaml:"description,omitempty"`
 	Comments    []string `yaml:"comments,omitempty"`
 }
 
