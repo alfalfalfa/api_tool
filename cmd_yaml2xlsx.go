@@ -3,10 +3,13 @@ package main
 import (
 	"strings"
 
+	_ "embed"
 	"github.com/docopt/docopt-go"
-	"github.com/gobuffalo/packr"
 	"github.com/tealeg/xlsx"
 )
+
+//go:embed templates/template.xlsx
+var bytes []byte
 
 const usageYaml2Xlsx = `api_tool yaml2xlsx
 	API定義の変換 yaml -> xlsx
@@ -47,8 +50,6 @@ func RunYaml2Xlsx() {
 }
 
 func outputXlsx(path string, groups Groups) {
-	bytes, err := packr.NewBox("./templates").MustBytes("template.xlsx")
-	e(err)
 	xlFile, err := xlsx.OpenBinary(bytes)
 	e(err)
 
