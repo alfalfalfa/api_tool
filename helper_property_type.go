@@ -607,6 +607,75 @@ func (this PropertyType) ToTSType(namespace string) (t string) {
 	}
 	return
 }
+func (this PropertyType) ToSwiftType(namespace string) (t string) {
+	if this.IsArray() {
+		t = "[" + this.GetArrayItemType().ToSwiftType(namespace) + "]"
+		return
+	}
+	switch string(this) {
+	case "null":
+		t = "String"
+	case "nil":
+		t = "String"
+	case "integer":
+		t = "Int"
+	case "int":
+		t = "Int"
+	case "int8":
+		t = "Int8"
+	case "int16":
+		t = "Int16"
+	case "int32":
+		t = "Int32"
+	case "int64":
+		t = "Int64"
+	case "long":
+		t = "Int64"
+	case "uint8":
+		t = "UInt8"
+	case "uint16":
+		t = "UInt16"
+	case "uint32":
+		t = "UInt32"
+	case "uint64":
+		t = "UInt64"
+	case "sint32":
+		t = "Int32"
+	case "sint64":
+		t = "Int64"
+	case "text":
+		t = "String"
+	case "string":
+		t = "String"
+	case "binary":
+		t = "String"
+	case "boolean":
+		t = "Bool"
+	case "bool":
+		t = "Bool"
+	case "number":
+		t = "Double"
+	case "float32":
+		t = "Float"
+	case "float":
+		t = "Float"
+	case "float64":
+		t = "Double"
+	case "double":
+		t = "Double"
+	case "timestamp":
+		t = "Int64"
+	default:
+		if tt, ok := typeMap[string(this)]; ok {
+			t = namespace + tt.Name
+		} else if ee, ok := enumMap[string(this)]; ok {
+			t = namespace + ee.Name
+		} else {
+			e(errors.New("unknown property type: " + dump2str(this)))
+		}
+	}
+	return
+}
 func (this PropertyType) IsArray() bool {
 	return strings.HasPrefix(string(this), "[]") || strings.HasSuffix(string(this), "[]")
 	//||	this.Name == "binary"
