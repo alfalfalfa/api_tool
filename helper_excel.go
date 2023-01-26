@@ -2,12 +2,12 @@ package main
 
 import (
 	"errors"
+	"github.com/xuri/excelize/v2"
+	"strconv"
 	"strings"
-
-	"github.com/tealeg/xlsx"
 )
 
-func checkCommentRow(row *xlsx.Row) bool {
+func checkCommentRow(row *xlsxRow) bool {
 	if len(row.Cells) == 0 {
 		return true
 	}
@@ -19,7 +19,7 @@ func checkCommentRow(row *xlsx.Row) bool {
 	return false
 }
 
-func checkCommentStartRow(row *xlsx.Row) bool {
+func checkCommentStartRow(row *xlsxRow) bool {
 	v := getCellString(row, 0)
 	if strings.HasPrefix(v, "//==") {
 		return true
@@ -27,14 +27,14 @@ func checkCommentStartRow(row *xlsx.Row) bool {
 	return false
 }
 
-func getCellString(row *xlsx.Row, i int) string {
+func getCellString(row *xlsxRow, i int) string {
 	if len(row.Cells) <= i {
 		return ""
 	}
 	return strings.TrimSpace(row.Cells[i].Value)
 }
 
-func getCellStrings(row *xlsx.Row, i int) []string {
+func getCellStrings(row *xlsxRow, i int) []string {
 	res := make([]string, 0)
 	lastNotEmptyIndex := 0
 	for ; i < len(row.Cells); i++ {
@@ -52,13 +52,13 @@ func getCellStrings(row *xlsx.Row, i int) []string {
 	return res[:lastNotEmptyIndex]
 }
 
-func getCellInt(row *xlsx.Row, i int) (int, error) {
+func getCellInt(row *xlsxRow, i int) (int, error) {
 	if len(row.Cells) <= i {
 		return 0, errors.New("index out of range")
 	}
 	return row.Cells[i].Int()
 }
-func getCellIntEmptyZero(row *xlsx.Row, i int) int {
+func getCellIntEmptyZero(row *xlsxRow, i int) int {
 	if len(row.Cells) <= i {
 		panic("index out of range")
 	}
@@ -69,7 +69,7 @@ func getCellIntEmptyZero(row *xlsx.Row, i int) int {
 	return res
 }
 
-func getCellBool(row *xlsx.Row, i int) bool {
+func getCellBool(row *xlsxRow, i int) bool {
 	return getCellString(row, i) != ""
 }
 
@@ -86,36 +86,78 @@ func separateModifier(v string) (string, string) {
 	return "", v
 }
 
+type xlsxSheet struct {
+	f    *excelize.File
+	Name string
+	Rows []*xlsxRow
+}
+
+func newXlsxSheet(f *excelize.File, Name string) *xlsxSheet {
+	s := &xlsxSheet{f, Name, make([]*xlsxRow, 0)}
+	rows, err := f.GetRows(Name)
+	e(err)
+	for _, row := range rows {
+		xr := &xlsxRow{make([]*xlsxCell, 0)}
+		for _, colCell := range row {
+			xc := &xlsxCell{colCell}
+			xr.Cells = append(xr.Cells, xc)
+		}
+		s.Rows = append(s.Rows, xr)
+	}
+
+	return s
+}
+
+//	func (s *xlsxSheet) GetRows() {
+//		rows, err := s.f.Rows(s.Name)
+//		e(err)
+//		for rows.Next() {
+//
+//		}
+//		l := make([]*excelize.Rows)
+//	}
+type xlsxRow struct {
+	Cells []*xlsxCell
+}
+type xlsxCell struct {
+	Value string
+}
+
+func (c *xlsxCell) Int() (int, error) {
+	return strconv.Atoi(c.Value)
+}
+
 // Excel -> 中間データ
 func loadExcels(pathes []string) ([]*Enum, TypeList, []*Action, Groups) {
 	groups := Groups(make([]*Group, 0))
-	enumSheets := make([]*xlsx.Sheet, 0)
-	typeSheets := make([]*xlsx.Sheet, 0)
-	actionSheets := make([]*xlsx.Sheet, 0)
+	enumSheets := make([]*xlsxSheet, 0)
+	typeSheets := make([]*xlsxSheet, 0)
+	actionSheets := make([]*xlsxSheet, 0)
 
 	for _, path := range pathes {
-		xlFile, err := xlsx.OpenFile(path)
+		xlFile, err := excelize.OpenFile(path)
 		e(err)
-		for _, sheet := range xlFile.Sheets {
+
+		for _, sheetName := range xlFile.GetSheetList() {
 			// _始まりのシートは無視する
-			if strings.HasPrefix(sheet.Name, "_") {
+			if strings.HasPrefix(sheetName, "_") {
 				continue
 			}
 
 			// 並び順をブック指定順、シート定義順にしたいので事前生成
-			groups.findOrCreate(GroupNameFromSheetName(sheet.Name))
+			groups.findOrCreate(GroupNameFromSheetName(sheetName))
 
 			// シート名prefixで仕分け
-			if strings.HasPrefix(sheet.Name, "enum_") {
-				enumSheets = append(enumSheets, sheet)
+			if strings.HasPrefix(sheetName, "enum_") {
+				enumSheets = append(enumSheets, newXlsxSheet(xlFile, sheetName))
 				continue
 			}
-			if strings.HasPrefix(sheet.Name, "type_") {
-				typeSheets = append(typeSheets, sheet)
+			if strings.HasPrefix(sheetName, "type_") {
+				typeSheets = append(typeSheets, newXlsxSheet(xlFile, sheetName))
 				continue
 			}
-			if strings.HasPrefix(sheet.Name, "action_") {
-				actionSheets = append(actionSheets, sheet)
+			if strings.HasPrefix(sheetName, "action_") {
+				actionSheets = append(actionSheets, newXlsxSheet(xlFile, sheetName))
 				continue
 			}
 		}
@@ -140,15 +182,15 @@ func loadExcels(pathes []string) ([]*Enum, TypeList, []*Action, Groups) {
 }
 
 // 全enum定義を複数シートから読み込み
-func loadEnums(enumSheets []*xlsx.Sheet) []*Enum {
+func loadEnums(enumSheets []*xlsxSheet) []*Enum {
 	var err error
 	enums := make([]*Enum, 0)
 	// enum定義ごとに行をまとめる
-	rowGroup := make(map[*Enum][]*xlsx.Row)
+	rowGroup := make(map[*Enum][]*xlsxRow)
 	for _, sheet := range enumSheets {
 		group := GroupNameFromSheetName(sheet.Name)
 		var currentEnum *Enum
-		var currentRows []*xlsx.Row
+		var currentRows []*xlsxRow
 		for ri, r := range sheet.Rows {
 			// skip header
 			if ri == 0 {
@@ -172,7 +214,7 @@ func loadEnums(enumSheets []*xlsx.Sheet) []*Enum {
 				currentEnum.Group = group
 				currentEnum.Modifier, currentEnum.Name = separateModifier(nameTmp)
 				currentEnum.Description = getCellString(r, 0)
-				currentRows = make([]*xlsx.Row, 0)
+				currentRows = make([]*xlsxRow, 0)
 				currentRows = append(currentRows, r)
 			} else {
 				// correct property row
@@ -216,14 +258,14 @@ func loadEnums(enumSheets []*xlsx.Sheet) []*Enum {
 }
 
 // 全型定義を複数シートから読み込み
-func loadTypes(typeSheets []*xlsx.Sheet) TypeList {
+func loadTypes(typeSheets []*xlsxSheet) TypeList {
 	types := TypeList(make([]*Type, 0))
 	// 型定義ごとに行をまとめる
-	rowGroup := make(map[*Type][]*xlsx.Row)
+	rowGroup := make(map[*Type][]*xlsxRow)
 	for _, sheet := range typeSheets {
 		group := GroupNameFromSheetName(sheet.Name)
 		var currentType *Type
-		var currentRows []*xlsx.Row
+		var currentRows []*xlsxRow
 		for ri, r := range sheet.Rows {
 			// skip header
 			if ri == 0 {
@@ -247,7 +289,7 @@ func loadTypes(typeSheets []*xlsx.Sheet) TypeList {
 				currentType.Group = group
 				currentType.Modifier, currentType.Name = separateModifier(nameTmp)
 				currentType.Description = getCellString(r, 0)
-				currentRows = make([]*xlsx.Row, 0)
+				currentRows = make([]*xlsxRow, 0)
 				currentRows = append(currentRows, r)
 			} else {
 				// correct property row
@@ -283,14 +325,14 @@ func loadTypes(typeSheets []*xlsx.Sheet) TypeList {
 }
 
 // 全アクション定義を複数シートから読み込み
-func loadActions(actionSheets []*xlsx.Sheet) []*Action {
+func loadActions(actionSheets []*xlsxSheet) []*Action {
 	actions := make([]*Action, 0)
 	// アクション定義ごとに行をまとめる
-	rowGroup := make(map[*Action][]*xlsx.Row)
+	rowGroup := make(map[*Action][]*xlsxRow)
 	for _, sheet := range actionSheets {
 		group := GroupNameFromSheetName(sheet.Name)
 		var currentAction *Action
-		var currentRows []*xlsx.Row
+		var currentRows []*xlsxRow
 		for ri, r := range sheet.Rows {
 			// skip header
 			if ri == 0 {
@@ -314,7 +356,7 @@ func loadActions(actionSheets []*xlsx.Sheet) []*Action {
 				currentAction.Group = group
 				currentAction.Name = nameTmp
 				currentAction.Description = getCellString(r, 0)
-				currentRows = make([]*xlsx.Row, 0)
+				currentRows = make([]*xlsxRow, 0)
 				currentRows = append(currentRows, r)
 			} else {
 				// correct property row

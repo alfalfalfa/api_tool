@@ -1,15 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"strings"
 
 	_ "embed"
 	"github.com/docopt/docopt-go"
-	"github.com/tealeg/xlsx"
+	"github.com/xuri/excelize/v2"
 )
 
 //go:embed templates/template.xlsx
-var bytes []byte
+var templateBytes []byte
 
 const usageYaml2Xlsx = `api_tool yaml2xlsx
 	API定義の変換 yaml -> xlsx
@@ -50,44 +51,92 @@ func RunYaml2Xlsx() {
 }
 
 func outputXlsx(path string, groups Groups) {
-	xlFile, err := xlsx.OpenBinary(bytes)
+	xlFile, err := excelize.OpenReader(bytes.NewReader(templateBytes))
 	e(err)
-
-	enumTemplateSheat := xlFile.Sheet["enum"]
-	typeTemplateSheat := xlFile.Sheet["type"]
-	actionTemplateSheat := xlFile.Sheet["action"]
-	typeMapSheat := xlFile.Sheet["_typemap"]
+	defer xlFile.Close()
+	enumTemplateSheetIndex, err := xlFile.GetSheetIndex("enum")
+	e(err)
+	typeTemplateSheetIndex, err := xlFile.GetSheetIndex("type")
+	e(err)
+	actionTemplateSheetIndex, err := xlFile.GetSheetIndex("action")
+	e(err)
 
 	for _, group := range groups {
 		if 0 < len(group.Enums) {
-			sheet, err := xlFile.AppendSheet(*enumTemplateSheat, "enum_"+group.Name)
+			sheet := "enum_" + group.Name
+			si, err := xlFile.NewSheet(sheet)
 			e(err)
-			writeEnumsToSheet(sheet, group.Enums)
+			e(xlFile.CopySheet(enumTemplateSheetIndex, si))
+			writeEnumsToSheet(xlFile, sheet, group.Enums)
 		}
 		if 0 < len(group.Types) {
-			sheet, err := xlFile.AppendSheet(*typeTemplateSheat, "type_"+group.Name)
+			sheet := "type_" + group.Name
+			si, err := xlFile.NewSheet(sheet)
 			e(err)
-			writeTypesToSheet(sheet, group.Types)
+			e(xlFile.CopySheet(typeTemplateSheetIndex, si))
+			writeTypesToSheet(xlFile, sheet, group.Types)
 		}
 		if 0 < len(group.Actions) {
-			sheet, err := xlFile.AppendSheet(*actionTemplateSheat, "action_"+group.Name)
+			sheet := "action_" + group.Name
+			si, err := xlFile.NewSheet(sheet)
 			e(err)
-			writeActionsToSheet(sheet, group.Actions)
+			e(xlFile.CopySheet(actionTemplateSheetIndex, si))
+			writeActionsToSheet(xlFile, sheet, group.Actions)
 		}
 	}
 
-	// テンプレートシート削除
-	xlFile.Sheets = xlFile.Sheets[4:]
-
 	// _typemapシート末尾に
-	xlFile.Sheets = append(xlFile.Sheets, typeMapSheat)
+	e(xlFile.SetSheetName("_typemap", "__typemap"))
+	typeMapSheatIndex, err := xlFile.GetSheetIndex("__typemap")
+	e(err)
+	newTypeMapSheatIndex, err := xlFile.NewSheet("_typemap")
+	e(err)
+	e(xlFile.CopySheet(typeMapSheatIndex, newTypeMapSheatIndex))
 
-	e(xlFile.Save(path))
+	// テンプレートシート削除
+	e(xlFile.DeleteSheet("enum"))
+	e(xlFile.DeleteSheet("type"))
+	e(xlFile.DeleteSheet("action"))
+	e(xlFile.DeleteSheet("__typemap"))
+
+	e(xlFile.SaveAs(path))
+}
+func c(ri, ci int) string {
+	s, err := excelize.CoordinatesToCellName(ci+1, ri+1)
+	e(err)
+	return s
 }
 
-func writeEnumsToSheet(sheet *xlsx.Sheet, enums []*Enum) {
+type row struct {
+	f     *excelize.File
+	sheet string
+	ri    int
+	ci    int
+}
+
+func newRow(f *excelize.File, sheet string, ri int) *row {
+	r := &row{
+		f:     f,
+		sheet: sheet,
+		ri:    ri,
+		ci:    -1,
+	}
+	return r
+}
+func (r *row) AddCell() *row {
+	r.ci++
+	return r
+}
+func (r *row) SetValue(v interface{}) *row {
+	e(r.f.SetCellValue(r.sheet, c(r.ri, r.ci), v))
+	return r
+}
+
+func writeEnumsToSheet(f *excelize.File, sheet string, enums []*Enum) {
+	ri := 0
 	for _, enum := range enums {
-		row := sheet.AddRow()
+		ri++
+		row := newRow(f, sheet, ri)
 		row.AddCell().SetValue(enum.Description)
 		row.AddCell().SetValue(enum.Modifier + enum.Name)
 
@@ -102,16 +151,18 @@ func writeEnumsToSheet(sheet *xlsx.Sheet, enums []*Enum) {
 				}
 			}
 
-			row = sheet.AddRow()
+			ri++
+			row = newRow(f, sheet, ri)
 			row.AddCell()
 			row.AddCell()
 		}
 	}
 }
-
-func writeTypesToSheet(sheet *xlsx.Sheet, types []*Type) {
+func writeTypesToSheet(f *excelize.File, sheet string, types []*Type) {
+	ri := 0
 	for _, typee := range types {
-		row := sheet.AddRow()
+		ri++
+		row := newRow(f, sheet, ri)
 		row.AddCell().SetValue(typee.Description)
 		row.AddCell().SetValue(typee.Modifier + typee.Name)
 		for i, prop := range typee.Properties {
@@ -127,17 +178,20 @@ func writeTypesToSheet(sheet *xlsx.Sheet, types []*Type) {
 				}
 			}
 
-			row = sheet.AddRow()
+			ri++
+			row = newRow(f, sheet, ri)
 			row.AddCell()
 			row.AddCell()
 		}
 	}
 }
 
-func writeActionsToSheet(sheet *xlsx.Sheet, actions []*Action) {
+func writeActionsToSheet(f *excelize.File, sheet string, actions []*Action) {
+	ri := 0
 	for _, action := range actions {
 		for i := 0; i < len(action.RequestProperties) || i < len(action.ResponseProperties); i++ {
-			row := sheet.AddRow()
+			ri++
+			row := newRow(f, sheet, ri)
 			if i == 0 {
 				row.AddCell().SetValue(action.Description)
 				row.AddCell().SetValue(action.Name)
@@ -172,6 +226,6 @@ func writeActionsToSheet(sheet *xlsx.Sheet, actions []*Action) {
 				}
 			}
 		}
-		sheet.AddRow()
+		ri++
 	}
 }
