@@ -80,6 +80,7 @@ func (this PropertyType) ToJsonSchemaType() (t schema.PrimitiveType) {
 }
 
 func (this PropertyType) ToGoType(packageName string) (t string) {
+	this.HasAnotherType()
 	if this.IsArray() {
 		t = "[]" + this.GetArrayItemType().ToGoType(packageName)
 		return
@@ -139,9 +140,9 @@ func (this PropertyType) ToGoType(packageName string) (t string) {
 		t = "uint32"
 	default:
 		if tt, ok := typeMap[string(this)]; ok {
-			t = packageName + "." + tt.Name
+			t = packageName + tt.Name
 		} else if ee, ok := enumMap[string(this)]; ok {
-			t = packageName + "." + ee.Name
+			t = packageName + ee.Name
 		} else {
 			e(errors.New("unknown property type: " + dump2str(this)))
 		}
